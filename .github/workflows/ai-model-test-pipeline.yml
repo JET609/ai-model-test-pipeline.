@@ -1,0 +1,44 @@
+name: AI Model Test Pipeline
+    2 
+    3 on:
+    4   push:
+    5     branches: [ "main", "master" ]
+    6   pull_request:
+    7     branches: [ "main", "master" ]
+    8 
+    9 jobs:
+   10   test-ai:
+   11     runs-on: ubuntu-latest
+   12 
+   13     steps:
+   14     - name: Checkout repository
+   15       uses: actions/checkout@v3
+   16 
+   17     - name: Set up Python
+   18       uses: actions/setup-python@v4
+   19       with:
+   20         python-version: '3.10'
+   21 
+   22     - name: Install dependencies
+   23       run: |
+   24         python -m pip install --upgrade pip
+   25         pip install -r requirements.txt
+   26 
+   27     - name: Run Linting
+   28       run: |
+   29         pip install flake8
+   30         flake8 . --count --ignore=E501 --show-source --statistics
+   31 
+   32     - name: Run Model Unit Tests
+   33       run: |
+   34         pytest -q --disable-warnings --maxfail=1
+   35 
+   36     - name: Validate AI Model
+   37       run: |
+   38         python scripts/test_model.py
+   39 
+   40     - name: Upload Logs & Results
+   41       uses: actions/upload-artifact@v3
+   42       with:
+   43         name: ai-test-results
+   44         path: test-output/
